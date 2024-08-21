@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Modifier</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Impact-ld</a>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h4 class="card-title text-center mb-4">Upload Files</h4>
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="event_name">Event Name</label>
+                                <input type="text" class="form-control" id="event_name" name="event_name" placeholder="Enter Event Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="trainer_name">Trainer's Name</label>
+                                <input type="text" class="form-control" id="trainer_name" name="trainer_name" placeholder="Enter Trainer's Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="formatted_date">Formatted Date</label>
+                                <input type="text" class="form-control" id="formatted_date" name="formatted_date" placeholder="Enter Formatted Date (e.g., 5th Of August 2024)" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="company_name">Company Name</label>
+                                <input type="text" class="form-control" id="company_name" name="company_name" placeholder="Enter Company Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="excel_file">Upload Excel File</label>
+                                <input type="file" class="form-control-file" name="excel_file" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="pdf_file">Upload PDF File</label>
+                                <input type="file" class="form-control-file" name="pdf_file" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="ppt_file">Upload PowerPoint File</label>
+                                <input type="file" class="form-control-file" name="ppt_file" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="picture1">Event Logo</label>
+                                <input type="file" class="form-control-file" name="picture1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="picture2">Company Logo</label>
+                                <input type="file" class="form-control-file" name="picture2" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                        </form>
+
+                        {% if download_link %}
+                            <div class="alert alert-success mt-4 text-center">
+                                <i class="fas fa-check-circle"></i> Processing completed successfully!
+                                <a href="{{ download_link }}" class="btn btn-success mt-2">Download Finalized PowerPoint</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <p>&copy; 2024 Impact Learning & Development. All rights reserved.</p>
+    </footer>
+</body>
+</html>
