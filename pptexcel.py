@@ -40,19 +40,23 @@ def copy_row_format(ws, source_row, target_row):
 
 
 @app.route('/', methods=['GET', 'POST'])
+# @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        ppt_files = request.files.getlist('ppt_files')
+        ppt_files = request.files.getlist('ppt_files')  # Handle multiple PPT files
         formatted_excel = request.files['formatted_excel']
-        company_name = request.form['company_name']
 
         # Load the formatted Excel file using openpyxl
         wb = load_workbook(formatted_excel)
-        ws = wb.active  # Assuming you want to modify the first sheet
 
         for ppt_file in ppt_files:
+            # Extract the company name from the filename
+            filename = ppt_file.filename
+            company_name_match = re.match(r'^\s*(.*?)\s*-', filename)
+            company_name = company_name_match.group(1).strip() if company_name_match else "Unknown Company"
+
             # Save the uploaded file temporarily
-            ppt_path = os.path.join('temp', ppt_file.filename)
+            ppt_path = os.path.join('temp', filename)
             ppt_file.save(ppt_path)
 
             # Load the PowerPoint presentation
@@ -85,6 +89,8 @@ def index():
                         if date_match:
                             workshop_date = date_match.group(1).strip()
                             slide_3_data['Date'] = workshop_date
+
+            # Extracting data from slide 7 (Y-axis values)
             slide_7 = presentation.slides[6]
             y_axis_values = []
             for shape in slide_7.shapes:
@@ -92,6 +98,7 @@ def index():
                     chart = shape.chart
                     for series in chart.series:
                         y_axis_values.extend(series.values)
+
             # Extracting data from slide 8 (Trainer percentage)
             slide_8 = presentation.slides[7]
             trainer_percentage = None
@@ -117,35 +124,40 @@ def index():
                 str(y_axis_values[2] * 100) + '%',  # Instructor allowed time for interaction and participation.
                 str(y_axis_values[3] * 100) + '%'   # Instructor created a positive and safe learning environment.
             ]
+
+            # Check if a sheet exists for the trainer; if not, create one
             trainer_name_sheet_found = False
             for sheet_name in wb.sheetnames:
                 sheet_name_trimmed = sheet_name.strip()  # Remove any leading or trailing spaces
-                if sheet_name_trimmed.lower() == trainer_name.lower():
+                if sheet_name_trimmed.lower() == slide_3_data['Trainer’s Name'].lower():
                     ws_trainer = wb[sheet_name]
                     trainer_name_sheet_found = True
                     break
-            if trainer_name_sheet_found:
-                # Find the next empty row in the trainer's sheet
-                next_row = ws_trainer.max_row + 1
+            if not trainer_name_sheet_found:
+                ws_trainer = wb.create_sheet(title=slide_3_data['Trainer’s Name'].strip())
 
-                # Copy the format of the previous row to the new row
-                if next_row > 2:  # Ensure there is a row to copy from
-                    copy_row_format(ws_trainer, next_row - 1, next_row)
-
-                # Insert the data into the new row
-                for col_num, value in enumerate(new_row, start=1):
-                    ws_trainer.cell(row=next_row, column=col_num, value=value)
-
-            # Find the next empty row in the Excel sheet
-            next_row = ws.max_row + 1
+            # Find the next empty row in the trainer's sheet
+            next_row_trainer = ws_trainer.max_row + 1
 
             # Copy the format of the previous row to the new row
-            if next_row > 2:  # Ensure there is a row to copy from
-                copy_row_format(ws, next_row - 1, next_row)
+            if next_row_trainer > 2:  # Ensure there is a row to copy from
+                copy_row_format(ws_trainer, next_row_trainer - 1, next_row_trainer)
 
-            # Insert the data into the new row
+            # Insert the data into the new row in the trainer's sheet
             for col_num, value in enumerate(new_row, start=1):
-                ws.cell(row=next_row, column=col_num, value=value)
+                ws_trainer.cell(row=next_row_trainer, column=col_num, value=value)
+
+            # Also insert the data into the main sheet
+            ws = wb.active  # Assuming you want to modify the first sheet
+            next_row_main = ws.max_row + 1
+
+            # Copy the format of the previous row to the new row
+            if next_row_main > 2:  # Ensure there is a row to copy from
+                copy_row_format(ws, next_row_main - 1, next_row_main)
+
+            # Insert the data into the new row in the main sheet
+            for col_num, value in enumerate(new_row, start=1):
+                ws.cell(row=next_row_main, column=col_num, value=value)
 
         # Save the updated formatted Excel file
         formatted_excel_path = os.path.join('temp', 'Updated_Formatted_Excel.xlsx')
@@ -155,6 +167,7 @@ def index():
         return send_file(formatted_excel_path, as_attachment=True, download_name='Trainers Analysis.xlsx')
 
     return render_template('analysis.html')
+
 
 if __name__ == '__main__':
     if not os.path.exists('temp'):
